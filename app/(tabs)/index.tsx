@@ -1,70 +1,75 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { Image, StyleSheet, Platform, View, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import HomeHeader from '@/components/HomeHeader';
+import { Text } from 'react-native-paper';
+import HomeCardComponent from '@/components/HomeCardComponent';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export interface Song {
+  title: string;
+  artist: string;
+  duration: string;
+  searchTitle: string;
+}
+
+export interface SongList {
+  name: string;
+  songs: Song[];
+  _id: string;
+}
+
 
 export default function HomeScreen() {
+
+  const [songLists, setSongLists] = useState<SongList[] | null>(null)
+
+  async function fetchSongLists() {
+    try {
+      const response = await fetch(`https://8c8d-45-252-76-166.ngrok-free.app/songLists`)
+      const data = await response.json()
+      setSongLists(data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    fetchSongLists()
+  }, [])
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ScrollView>
+      <SafeAreaView>
+        <View style={styles.container}>
+          <HomeHeader />
+          <Text variant="headlineMedium">Prarthana Plans</Text>
+        </View>
+        {(songLists == null || songLists.length == 0) && <Text variant='bodyLarge' style={{ textAlign: "center" }}>No song lists found</Text>}
+        <View style={styles.cardContainer}>
+          {songLists && songLists.map((songList) => (
+            <HomeCardComponent key={songList._id} _id={songList._id} title={songList.name} subtitle={`${Math.floor(Math.random() * (50 - 10) + 10)} days plan`} lock={false} />
+          ))}
+        </View>
+      </SafeAreaView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    paddingTop: Platform.OS === 'android' ? 25 : 0,
+    paddingLeft: 16,
+    marginBottom: 32,
+    position: 'relative',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  cardContainer: {
+    margin: 16,
+    height: "100%",
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 16,
+    justifyContent:"space-evenly"
+  }
 });
