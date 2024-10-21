@@ -1,13 +1,49 @@
 import { View, StyleSheet, ImageBackground } from 'react-native'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useNavigation } from 'expo-router'
 import { Avatar, IconButton, MD3Colors, ProgressBar, Text } from 'react-native-paper'
-import { TouchableOpacity } from 'react-native-gesture-handler'
+import { storage } from '@/firebase'
+import { getDownloadURL, ref } from 'firebase/storage'
+import { Audio } from 'expo-av'
 
 export default function songPlayer() {
 
+    const [sound, setSound] = useState<string | null>(null)
+    const [isSoundPlaying, setIsSoundPlaying] = useState(false)
+    const [soundExpo, setSoundExpo] = useState<Audio.Sound | null>(null)
     const navigation = useNavigation()
     const { searchTitle, title, artist, duration } = useLocalSearchParams()
+    const songRef = ref(storage, searchTitle as string + ".mp3")
+
+    async function playSound() {
+        if (sound === null) {
+            return
+        }
+
+        const { sound: s } = await Audio.Sound.createAsync({ uri: sound })
+        setSoundExpo(s)
+        await s.playAsync()
+
+        setIsSoundPlaying(true)
+    }
+
+    async function pauseSound() {
+        if (soundExpo === null) {
+            return
+        }
+
+        await soundExpo.pauseAsync()
+        setIsSoundPlaying(false)
+    }
+
+    async function replaySound() {
+        if (soundExpo === null) {
+            return
+        }
+
+        await soundExpo.replayAsync()
+        setIsSoundPlaying(true)
+    }
 
     useEffect(() => {
         navigation.setOptions({
@@ -18,6 +54,12 @@ export default function songPlayer() {
             headerBackTitleStyle: {
                 color: 'black'
             }
+        })
+
+        getDownloadURL(songRef).then((url) => {
+            setSound(url)
+        }).catch((error) => {
+            console.log("Error getting document:", error)
         })
     }, [title])
 
@@ -44,24 +86,29 @@ export default function songPlayer() {
 
             <View style={styles.audio_progress_container}>
                 <ProgressBar progress={0.5} color={MD3Colors.error50} />
+                <View style={styles.audio_progress}>
+                    <Text variant='bodySmall'>0:00</Text>
+                    <Text variant='bodySmall'>{duration}</Text>
+                </View>
             </View>
 
             <View style={styles.player_button_container}>
                 <IconButton
-                    icon="replay"
+                    icon="pause"
                     size={40}
-                    onPress={() => console.log('Pressed')}
+                    onPress={pauseSound}
+                    disabled={!isSoundPlaying}
                 />
                 <IconButton
                     icon="play"
                     size={40}
-                    onPress={() => console.log('Pressed')}
+                    onPress={playSound}
+                    disabled={isSoundPlaying}
                 />
                 <IconButton
-                    icon="forward"
+                    icon="replay"
                     size={40}
-                    onPress={() => console.log('Pressed')}
-                    iconColor='black'
+                    onPress={replaySound}
                 />
             </View>
         </View>
@@ -109,5 +156,12 @@ const styles = StyleSheet.create({
     },
     audio_progress_container: {
         padding: 20
+    },
+    audio_progress: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 10
     }
 })
