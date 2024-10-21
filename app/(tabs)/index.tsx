@@ -1,10 +1,10 @@
-import { Image, StyleSheet, Platform, View, ScrollView } from 'react-native';
+import { StyleSheet, Platform, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HomeHeader from '@/components/HomeHeader';
 import { Text } from 'react-native-paper';
 import HomeCardComponent from '@/components/HomeCardComponent';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export interface Song {
   title: string;
@@ -26,7 +26,7 @@ export default function HomeScreen() {
 
   async function fetchSongLists() {
     try {
-      const response = await fetch(`https://8c8d-45-252-76-166.ngrok-free.app/songLists`)
+      const response = await fetch(`https://reactnativebackendserverassign.onrender.com/songLists`)
       const data = await response.json()
       setSongLists(data)
     } catch (error) {
@@ -48,7 +48,13 @@ export default function HomeScreen() {
         {(songLists == null || songLists.length == 0) && <Text variant='bodyLarge' style={{ textAlign: "center" }}>No song lists found</Text>}
         <View style={styles.cardContainer}>
           {songLists && songLists.map((songList) => (
-            <HomeCardComponent key={songList._id} _id={songList._id} title={songList.name} subtitle={`${Math.floor(Math.random() * (50 - 10) + 10)} days plan`} lock={false} />
+            <LinearGradient
+              // Button Linear Gradient
+              key={songList._id}
+              colors={['rgba(0,0,0,0.8)', 'transparent']}
+              >
+              <HomeCardComponent  _id={songList._id} title={songList.name} subtitle={`${Math.floor(Math.random() * (50 - 10) + 10)} days plan`} lock={false} />
+            </LinearGradient>
           ))}
         </View>
       </SafeAreaView>
@@ -70,6 +76,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     rowGap: 16,
-    justifyContent:"space-evenly"
+    justifyContent: "space-evenly"
   }
 });
