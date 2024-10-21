@@ -20,7 +20,7 @@ export default function songList() {
     async function fetchSongList(id: string) {
         try {
             setLoading(true)
-            const response = await fetch(`https://8c8d-45-252-76-166.ngrok-free.app/songLists/${id}`)
+            const response = await fetch(`https://reactnativebackendserverassign.onrender.com/songLists/${id}`)
             const data = await response.json()
             setSongList(data)
             setLoading(false)
